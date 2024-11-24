@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "imagelabeling_firebaseml_cw08" "\0"
+            VALUE "FileDescription", "CW08-Imaging-Firebase" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "imagelabeling_firebaseml_cw08" "\0"
+            VALUE "InternalName", "CW08-Imaging-Firebase" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "imagelabeling_firebaseml_cw08.exe" "\0"
-            VALUE "ProductName", "imagelabeling_firebaseml_cw08" "\0"
+            VALUE "OriginalFilename", "CW08-Imaging-Firebase.exe" "\0"
+            VALUE "ProductName", "CW08-Imaging-Firebase" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

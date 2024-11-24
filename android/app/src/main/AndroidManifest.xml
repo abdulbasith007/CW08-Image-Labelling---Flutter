@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="imagelabeling_firebaseml_cw08"
+        android:label="CW08-Imaging-Firebase"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

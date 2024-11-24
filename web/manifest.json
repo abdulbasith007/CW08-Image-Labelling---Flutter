@@ -1,6 +1,6 @@
 {
-    "name": "imagelabeling_firebaseml_cw08",
-    "short_name": "imagelabeling_firebaseml_cw08",
+    "name": "CW08-Imaging-Firebase",
+    "short_name": "CW08-Imaging-Firebase",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

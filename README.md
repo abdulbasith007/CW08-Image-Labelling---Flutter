@@ -1,4 +1,4 @@
-# imagelabeling_firebaseml_cw08
+# CW08-Imaging-Firebase
 
 A new Flutter project.
 
