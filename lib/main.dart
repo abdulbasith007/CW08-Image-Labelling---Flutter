@@ -7,68 +7,64 @@ import 'package:firebase_core/firebase_core.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); // Initialize Firebase
-  runApp(ImageLabelingApp());
+  runApp(const ImageAnalyzerApp());
 }
 
-class ImageLabelingApp extends StatelessWidget {
+class ImageAnalyzerApp extends StatelessWidget {
+  const ImageAnalyzerApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ImageLabelingScreen(),
+      title: 'Image Analyzer',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const ImageAnalyzerScreen(),
     );
   }
 }
 
-class ImageLabelingScreen extends StatefulWidget {
+class ImageAnalyzerScreen extends StatefulWidget {
+  const ImageAnalyzerScreen({Key? key}) : super(key: key);
+
   @override
-  _ImageLabelingScreenState createState() => _ImageLabelingScreenState();
+  _ImageAnalyzerScreenState createState() => _ImageAnalyzerScreenState();
 }
 
-class _ImageLabelingScreenState extends State<ImageLabelingScreen> {
-  File? _selectedImage;
-  List<String> _labels = [];
-  final ImagePicker _picker = ImagePicker();
+class _ImageAnalyzerScreenState extends State<ImageAnalyzerScreen> {
+  File? _imageFile;
+  List<String> _detectedLabels = [];
+  final ImagePicker _imagePicker = ImagePicker();
 
-  // Function to pick an image from the camera or gallery
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
+  Future<void> _selectImage(ImageSource source) async {
+    final pickedFile = await _imagePicker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _imageFile = File(pickedFile.path);
+        _detectedLabels.clear(); // Clear previous results
       });
-      _labelImage();
+      await _processImageLabels();
     }
   }
 
-  // Function to label objects in the selected image using Firebase ML Kit
-  Future<void> _labelImage() async {
-    if (_selectedImage == null) return;
+  Future<void> _processImageLabels() async {
+    if (_imageFile == null) return;
 
-    final inputImage = InputImage.fromFile(_selectedImage!);
-    final imageLabeler = ImageLabeler(
-      options:
-          ImageLabelerOptions(confidenceThreshold: 0.5), // Confidence threshold
-    );
+    final inputImage = InputImage.fromFile(_imageFile!);
+    final labelerOptions = ImageLabelerOptions(confidenceThreshold: 0.6);
+    final imageLabeler = ImageLabeler(options: labelerOptions);
 
     try {
-      final List<ImageLabel> labels =
-          await imageLabeler.processImage(inputImage);
-
-      print('Detected labels:');
-      for (var label in labels) {
-        print(
-            '${label.label} - ${(label.confidence * 100).toStringAsFixed(2)}%');
-      }
+      final labels = await imageLabeler.processImage(inputImage);
 
       setState(() {
-        _labels = labels
+        _detectedLabels = labels
             .map((label) =>
-                '${label.label} (${(label.confidence * 100).toStringAsFixed(2)}%)')
+                '${label.label} (${(label.confidence * 100).toStringAsFixed(1)}%)')
             .toList();
       });
     } catch (e) {
-      print('Error during image labeling: $e');
+      print('Error processing image: $e');
     } finally {
       imageLabeler.close();
     }
@@ -77,67 +73,75 @@ class _ImageLabelingScreenState extends State<ImageLabelingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Image Labeling App'),
-      ),
+      appBar: AppBar(title: const Text('Image Analyzer')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Display the selected image
-            if (_selectedImage != null)
-              Image.file(
-                _selectedImage!,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              )
-            else
-              Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.grey[300],
-                child: Center(
-                  child: Text('No image selected'),
-                ),
-              ),
+            _imagePreview(),
             const SizedBox(height: 16),
-            // Buttons to pick an image from the camera or gallery
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(ImageSource.camera),
-                  icon: Icon(Icons.camera),
-                  label: Text('Camera'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(ImageSource.gallery),
-                  icon: Icon(Icons.photo),
-                  label: Text('Gallery'),
-                ),
-              ],
-            ),
+            _actionButtons(),
             const SizedBox(height: 16),
-            // Display the detected labels
-            Expanded(
-              child: _labels.isNotEmpty
-                  ? ListView.builder(
-                      itemCount: _labels.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: Icon(Icons.label),
-                          title: Text(_labels[index]),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Text('No labels detected'),
-                    ),
-            ),
+            _labelResults(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _imagePreview() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: _imageFile != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.file(
+                _imageFile!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
+            )
+          : const Center(child: Text('No Image Selected')),
+    );
+  }
+
+  Widget _actionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () => _selectImage(ImageSource.camera),
+          icon: const Icon(Icons.camera_alt),
+          label: const Text('Camera'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () => _selectImage(ImageSource.gallery),
+          icon: const Icon(Icons.photo_library),
+          label: const Text('Gallery'),
+        ),
+      ],
+    );
+  }
+
+  Widget _labelResults() {
+    return Expanded(
+      child: _detectedLabels.isNotEmpty
+          ? ListView.builder(
+              itemCount: _detectedLabels.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.label_outline),
+                  title: Text(_detectedLabels[index]),
+                );
+              },
+            )
+          : const Center(child: Text('No Labels Detected')),
     );
   }
 }
